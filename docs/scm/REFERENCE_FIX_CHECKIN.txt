@@ -1,8 +1,0 @@
-清理作品集场景的太阳 Animator 丢失引用
-
-- 最终工程还原检查发现 Directional Light 的 Animator 引用了不存在的控制器 GUID
-- 本地未找到对应太阳动画资源，通过 Unity Editor API 清除丢失引用并禁用空 Animator
-- 保留太阳 Transform 姿态与光照参数，不重新制作或声称已恢复缺失的太阳动画
-- 确认摄像机现有 Main Camera.controller 与 CameraShowCase 动画剪辑引用正常并保持原样
-- 发布副本同步清理引用，公开天空演示仍保持摄像机 Animator 禁用以方便参数调节
-- 更新 GitHub 发布验证说明及真实 SCM 变更集导出
