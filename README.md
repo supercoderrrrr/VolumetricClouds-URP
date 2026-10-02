@@ -2,15 +2,31 @@
 
 [English](#english) | [中文](#中文)
 
-[![Animated demo preview](docs/media/demo-preview.gif)](docs/media/volumetric-clouds-demo.mp4)
-
-**[Watch the full demo: 25.87 seconds, 1080p / 查看完整演示视频](docs/media/volumetric-clouds-demo.mp4)**
+**[Original mountain demo: 25.87 seconds, 1080p / 原始雪山场景演示](docs/media/volumetric-clouds-demo.mp4)**
 
 ## English
 
 A real-time volumetric cloud rendering study for **Unity 2022.3.62f2 / URP 14.0.12**. The project combines offline GPU noise generation, a world-space cloud layer, light marching, temporal reconstruction and editor authoring tools.
 
 The mountain in the recording is [Free Snow Mountain by ProAssets](https://assetstore.unity.com/packages/3d/environments/landscapes/free-snow-mountain-63002), not a cloud-rendering contribution. Its source files are excluded from this public repository under the Asset Store redistribution restrictions. The included `SampleScene` is a self-contained sky/cloud demo with the same cloud system. The original mountain scene remains in the local SCM project.
+
+### Feature Demonstrations
+
+These short clips isolate one control at a time. They are **automated Unity parameter sweeps**, not recordings of manual mouse dragging. The camera and wind are fixed and temporal accumulation is disabled so changes are easy to compare. GIF playback rate is not a measured runtime FPS. Click a preview for its MP4 version; all media are kept in this repository.
+
+**Cloud coverage: 0.35 to approximately 1.0 and back**
+
+[![Coverage parameter sweep](docs/media/coverage-sweep.gif)](docs/media/coverage-sweep.mp4)
+
+**Sun direction: elevation 15 to approximately 75 degrees and back**
+
+[![Sun direction and cloud lighting](docs/media/sun-direction-sweep.gif)](docs/media/sun-direction-sweep.mp4)
+
+**Baked Texture3D: animated R-channel slices of Shape and Detail noise**
+
+[![Shape and Detail Texture3D slices](docs/media/noise-slices.gif)](docs/media/noise-slices.mp4)
+
+The sweep baseline and reproduction steps are recorded in [showcase notes](docs/SHOWCASE.md), with [per-frame parameter values](docs/media/showcase-parameters.csv).
 
 ### Development History
 
@@ -93,6 +109,14 @@ The inspector exposes Final, CloudOnly, Alpha, Lighting, Weather, Height and Ray
 | --- | --- | --- | --- |
 | ![Final](docs/media/cloud-final.png) | ![Alpha](docs/media/cloud-alpha.png) | ![Lighting](docs/media/cloud-lighting.png) | ![RaySteps](docs/media/cloud-raysteps.png) |
 
+**RaySteps measures executed view-ray density samples, not cloud opacity or GPU time**. Black means the ray did not enter a visible cloud-layer segment. Blue/cyan indicate a lower fraction of the configured Max Steps budget; yellow/red indicate a higher fraction. The count includes empty density samples and excludes secondary light-march samples. Similar counts can legitimately look uniform when early termination and skipping do not save work. Diagnostic views bypass atmospheric tint, temporal history blending and the main URP post-processing pass. Lighting shows opacity-weighted light transmittance rather than the brightest individual sample.
+
+| Empty-space skipping OFF | Empty-space skipping ON |
+| --- | --- |
+| ![View-ray sample budget without skipping](docs/media/cloud-raysteps-no-skipping.png) | ![View-ray sample budget with skipping](docs/media/cloud-raysteps.png) |
+
+The camera, cloud parameters and color scale are identical in this comparison. The marcher now stops when an enlarged empty-region step leaves the depth-limited cloud interval instead of continuing to spend the loop budget outside it. This is a correctness fix, not a claim of a measured GPU speedup.
+
 ### Source Map
 
 | File | Responsibility |
@@ -119,6 +143,12 @@ Release checks and their scope are recorded in [the validation notes](docs/VALID
 基于 **Unity 2022.3.62f2 / URP 14.0.12** 的实时体积云渲染学习与作品集项目，包含离线 GPU 噪声生成、世界空间云层、视线与光线步进、时间重建及编辑器工具。
 
 视频中的雪山来自 ProAssets 的 [Free Snow Mountain](https://assetstore.unity.com/packages/3d/environments/landscapes/free-snow-mountain-63002)，不属于本项目实现的体积云功能。按照 Asset Store 的源资源再分发限制，公开仓库不包含雪山模型与贴图，提供使用相同云渲染系统、可独立运行的天空演示场景。原始雪山场景保留在本地 SCM 工程中。
+
+### 分项演示
+
+英文部分直接展示三段 GIF，每段约 6 秒，点击即可打开同一仓库里的 MP4：覆盖率由 0.35 增大到接近 1.0 再恢复、太阳仰角由 15 度增大到接近 75 度再恢复，以及 Shape / Detail 三维噪声 R 通道的连续切片。
+
+这些素材是**使用真实 Unity 渲染器自动扫描参数生成的演示**，不是鼠标拖动 Inspector 的屏幕录像。相机和风场保持不变，关闭时间累积以便观察单项变化；视频编码帧率不代表运行时 FPS。临时展示参数没有覆盖场景预设，详细设置和复现方法见[演示说明](docs/SHOWCASE.md)，逐帧数值见 [CSV](docs/media/showcase-parameters.csv)。原始雪山视频仍保留在首页链接中。
 
 ### 开发记录
 
@@ -172,6 +202,10 @@ Release checks and their scope are recorded in [the validation notes](docs/VALID
 ### 调试与实现边界
 
 提供 Final、CloudOnly、Alpha、Lighting、Weather、Height、RaySteps 调试视图。上方的四张调试图来自仓库中可运行的公开场景，与雪山演示视频区分展示。核心脚本与 Shader 的职责映射见英文部分的 Source Map。
+
+**RaySteps 表示实际执行的视线密度采样次数，不是云的密度或 GPU 耗时**。黑色表示没有进入可见的云层区间；蓝／青色表示占 Max Steps 预算较少，黄／红色表示占比较高。空密度采样也计数，不包含朝太阳的二次光线采样。没有提前结束或跳步收益时，大片区域颜色一致是正常现象。调试视图绕过大气染色、历史混合和主要 URP 后处理；Lighting 改为按不透明度贡献加权的光线透过率。
+
+上方同时提供跳步关闭／开启的同视角对照。修复了空区增大步长后越过有效云层区间仍继续采样的问题；这证明采样停止条件正确，不等于已经测量了 GPU 加速倍数。
 
 当前使用水平云层，未实现行星球壳大气、SDF 体积或保守距离场步进。空区跳步是启发式优化，粗步长可能遗漏细小云块。多重散射、空气透视与云影均为近似模型。时间重投影基于场景深度并共用历史，高速运动、动态云与多相机仍有待强化；高度曲线纹理更新尚未做性能测量。
 

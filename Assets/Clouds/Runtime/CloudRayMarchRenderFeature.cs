@@ -51,7 +51,11 @@ public class CloudRaymarchRenderFeature : ScriptableRendererFeature
         if (settings.cloudMaterial == null || settings.shapeNoise == null)
             return;
 
-        cloudPass.renderPassEvent = settings.renderPassEvent;
+        CloudVolume volume = CloudVolume.Active;
+        bool diagnostic = volume != null && (int)volume.debugView >= 2;
+        cloudPass.renderPassEvent = diagnostic
+            ? RenderPassEvent.AfterRenderingPostProcessing
+            : settings.renderPassEvent;
         renderer.EnqueuePass(cloudPass);
     }
 
@@ -73,6 +77,7 @@ public class CloudRaymarchRenderFeature : ScriptableRendererFeature
         private RTHandle tempColorTexture;
 
         private bool historyValid;
+        private int previousDebugView = -1;
         private int historyWidth;
         private int historyHeight;
         private Matrix4x4 previousViewProjectionMatrix = Matrix4x4.identity;
@@ -233,6 +238,8 @@ public class CloudRaymarchRenderFeature : ScriptableRendererFeature
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            // Post processing can swap the camera color target
+            source = renderingData.cameraData.renderer.cameraColorTargetHandle;
             if (settings.cloudMaterial == null || settings.shapeNoise == null || source == null)
                 return;
 
@@ -452,6 +459,9 @@ public class CloudRaymarchRenderFeature : ScriptableRendererFeature
             Vector2 weatherWindOffset = new Vector2(windDir.x, windDir.z) * windSpeed * weatherWindSpeedMultiplier * time;
 
             float actualTemporalBlend = temporalAccumulation && historyValid ? temporalBlend : 0.0f;
+            if (debugView >= 2 || debugView != previousDebugView)
+                actualTemporalBlend = 0.0f;
+            previousDebugView = debugView;
 
             if (camera != null && camera.cameraType == CameraType.SceneView)
                 actualTemporalBlend = 0.0f;

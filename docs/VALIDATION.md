@@ -16,6 +16,11 @@ Validation was performed on the isolated public export using Unity 2022.3.62f2 a
 - Private files required to restore the original project were checked into SCM as CS5
 - A stale Directional Light Animator controller reference was identified by the GUID audit, cleared through Unity's editor API in both the source and public scene, and recorded as CS6; the missing sun animation is not reconstructed, while the existing camera animation remains intact
 - CS0 through CS6 were exported with original timestamps, comments and changed paths, omitting account email and cloud workspace identifiers
+- The feature showcase rendered 60 coverage frames, 60 sun-direction frames and 48 actual Texture3D slice frames; the captured values are recorded in the showcase CSV
+- RaySteps was verified after URP post-processing swaps the camera color target; its heatmap bypasses atmospheric tint and temporal history
+- A zero-density render regression verified that empty-space skipping reduces the decoded view-step budget fraction and that atmospheric/history controls do not alter diagnostic pixels
+- Lighting diagnostics were changed from maximum sample transmittance to opacity-contribution-weighted transmittance
+- The two diagnostic code fixes and Chinese log were checked into SCM as CS7; the sanitized history now includes CS0 through CS7
 
 The final static audit is recorded in [RELEASE_AUDIT.json](RELEASE_AUDIT.json). The batch render scope is also recorded in [UNITY_VALIDATION.txt](UNITY_VALIDATION.txt). Temporary capture/test scripts are not part of the shipped project.
 
@@ -34,5 +39,9 @@ Static credential-pattern scans reduce accidental exposure but cannot prove that
 已完成脚本导入编译、实际 Compute Shader 连续生成测试、32,768 体素与非纯色检查、GUID 保留检查、随工程附带的 3D 纹理通道切片输出、四种调试视图渲染、Shader 错误检查及工具截图人工核对。必要的 Private 工程文件已补入 SCM 的 CS5；最终引用审查发现 Directional Light 的 Animator 控制器缺失，通过 Unity API 同步清除其丢失引用并禁用空 Animator，记录为 CS6。缺失的太阳动画没有重新制作，现有摄像机动画保持原样。公开历史导出包含 CS0 至 CS6，并移除账户邮箱与云工作区标识。
 
 公开场景通过 Unity API 移除雪山源资产依赖。截图使用 Unity 自身的 GUI 渲染缓冲区生成，临时截图与测试脚本不纳入发布工程。最终文件审查结果见 RELEASE_AUDIT.json。
+
+追加生成覆盖率 60 帧、太阳方向 60 帧、实际三维噪声切片 48 帧，逐帧参数随 CSV 公开。修复并验证了 URP 后处理交换颜色缓冲后的诊断目标引用，以及空区跳步越过云层后的停止条件；热力图绕过大气染色和时间混合，空密度渲染回归确认采样预算占比降低、诊断像素不受大气与历史开关影响。Lighting 使用不透明度贡献加权的透过率。
+
+两个诊断代码文件和中文日志提交为真实 SCM CS7，公开脱敏历史更新为 CS0 至 CS7。没有提交或覆盖原场景与预设参数。
 
 尚未测量 FPS 和 GPU 耗时，也未执行完整 PlayMode 回归、快速相机运动下的时间重建测试或跨平台验证。原始视频展示之前的交互运行效果，不作为最终改动的完整回归测试。启发式空区跳步、共享历史、曲线纹理更新以及近似散射与云影仍存在文档中说明的实现限制。

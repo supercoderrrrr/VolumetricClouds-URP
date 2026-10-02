@@ -1,6 +1,6 @@
 {
   "source": "Unity Version Control / Plastic SCM",
-  "exportedAt": "2026-10-02T02:51:07.4102516+00:00",
+  "exportedAt": "2026-10-02T12:00:42.5840671+08:00",
   "redactions": [
     "Account email",
     "Organization and server identifiers",
@@ -1071,6 +1071,29 @@
           "type": "Added",
           "path": "/Documentation/SCM_FINAL_REFERENCE_FIX.txt",
           "previousPath": "/Documentation/SCM_FINAL_REFERENCE_FIX.txt"
+        }
+      ]
+    },
+    {
+      "changeset": 7,
+      "date": "2026-10-02T11:59:27+08:00",
+      "branch": "/main",
+      "comment": "修复体积云诊断视图与有效采样区间，补充分项展示说明\n\n1. 修复视线步进在启发式空区跳步后越过有效云层／场景深度区间仍继续采样的问题\n2. RaySteps 改为按当前 Max Steps 预算归一化的采样热力图，区分无有效区间与采样占比\n3. 诊断视图绕过大气染色和历史混合，切换调试模式时禁用旧历史混合\n4. 诊断通道移到主要 URP 后处理之后，并在执行时重新取得交换后的相机颜色目标\n5. Lighting 调试改为按不透明度贡献加权的光线透过率，避免单个透亮采样将整条射线显示为白色\n6. 使用 Unity 2022.3.62f2／D3D11 在独立发布副本完成覆盖率 60 帧、太阳方向 60 帧、噪声切片 48 帧及调试回归；生成约 6 秒的 GIF／MP4 小段供公开 README 展示\n7. 空密度对照确认跳步降低视线采样预算占比，大气与时间开关未改变诊断像素；尚未测量 GPU 耗时，不据此宣称加速倍数\n8. 原场景、摄像机动画、雪山资产和保存的预设参数保持不变；临时录制脚本和原始渲染帧不纳入发布工程\n\n公开 README 同时保留英文和中文版本，记录演示临时基准参数、逐帧数值及跳步关闭／开启的诊断对照\n",
+      "changedItems": [
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Shaders/CloudRayMarch.shader",
+          "previousPath": "/Assets/Clouds/Shaders/CloudRayMarch.shader"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation/SCM_SHOWCASE_CHECKIN.txt",
+          "previousPath": "/Documentation/SCM_SHOWCASE_CHECKIN.txt"
         }
       ]
     }

@@ -1,0 +1,169 @@
+clip,frame,parameter,value
+coverage,0,Coverage,0.35000
+coverage,1,Coverage,0.35184
+coverage,2,Coverage,0.35734
+coverage,3,Coverage,0.36645
+coverage,4,Coverage,0.37904
+coverage,5,Coverage,0.39499
+coverage,6,Coverage,0.41412
+coverage,7,Coverage,0.43620
+coverage,8,Coverage,0.46098
+coverage,9,Coverage,0.48819
+coverage,10,Coverage,0.51752
+coverage,11,Coverage,0.54863
+coverage,12,Coverage,0.58118
+coverage,13,Coverage,0.61478
+coverage,14,Coverage,0.64907
+coverage,15,Coverage,0.68365
+coverage,16,Coverage,0.71814
+coverage,17,Coverage,0.75213
+coverage,18,Coverage,0.78525
+coverage,19,Coverage,0.81712
+coverage,20,Coverage,0.84739
+coverage,21,Coverage,0.87570
+coverage,22,Coverage,0.90173
+coverage,23,Coverage,0.92520
+coverage,24,Coverage,0.94583
+coverage,25,Coverage,0.96339
+coverage,26,Coverage,0.97768
+coverage,27,Coverage,0.98855
+coverage,28,Coverage,0.99586
+coverage,29,Coverage,0.99954
+coverage,30,Coverage,0.99954
+coverage,31,Coverage,0.99586
+coverage,32,Coverage,0.98855
+coverage,33,Coverage,0.97768
+coverage,34,Coverage,0.96339
+coverage,35,Coverage,0.94583
+coverage,36,Coverage,0.92520
+coverage,37,Coverage,0.90173
+coverage,38,Coverage,0.87570
+coverage,39,Coverage,0.84739
+coverage,40,Coverage,0.81712
+coverage,41,Coverage,0.78525
+coverage,42,Coverage,0.75213
+coverage,43,Coverage,0.71814
+coverage,44,Coverage,0.68365
+coverage,45,Coverage,0.64907
+coverage,46,Coverage,0.61478
+coverage,47,Coverage,0.58118
+coverage,48,Coverage,0.54863
+coverage,49,Coverage,0.51752
+coverage,50,Coverage,0.48819
+coverage,51,Coverage,0.46098
+coverage,52,Coverage,0.43620
+coverage,53,Coverage,0.41412
+coverage,54,Coverage,0.39499
+coverage,55,Coverage,0.37904
+coverage,56,Coverage,0.36645
+coverage,57,Coverage,0.35734
+coverage,58,Coverage,0.35184
+coverage,59,Coverage,0.35000
+sun-direction,0,Sun elevation,15.00000
+sun-direction,1,Sun elevation,15.16996
+sun-direction,2,Sun elevation,15.67790
+sun-direction,3,Sun elevation,16.51807
+sun-direction,4,Sun elevation,17.68096
+sun-direction,5,Sun elevation,19.15338
+sun-direction,6,Sun elevation,20.91865
+sun-direction,7,Sun elevation,22.95678
+sun-direction,8,Sun elevation,25.24466
+sun-direction,9,Sun elevation,27.75638
+sun-direction,10,Sun elevation,30.46347
+sun-direction,11,Sun elevation,33.33527
+sun-direction,12,Sun elevation,36.33924
+sun-direction,13,Sun elevation,39.44134
+sun-direction,14,Sun elevation,42.60641
+sun-direction,15,Sun elevation,45.79862
+sun-direction,16,Sun elevation,48.98177
+sun-direction,17,Sun elevation,52.11980
+sun-direction,18,Sun elevation,55.17717
+sun-direction,19,Sun elevation,58.11922
+sun-direction,20,Sun elevation,60.91263
+sun-direction,21,Sun elevation,63.52574
+sun-direction,22,Sun elevation,65.92895
+sun-direction,23,Sun elevation,68.09502
+sun-direction,24,Sun elevation,69.99942
+sun-direction,25,Sun elevation,71.62056
+sun-direction,26,Sun elevation,72.94009
+sun-direction,27,Sun elevation,73.94304
+sun-direction,28,Sun elevation,74.61805
+sun-direction,29,Sun elevation,74.95748
+sun-direction,30,Sun elevation,74.95748
+sun-direction,31,Sun elevation,74.61805
+sun-direction,32,Sun elevation,73.94303
+sun-direction,33,Sun elevation,72.94009
+sun-direction,34,Sun elevation,71.62056
+sun-direction,35,Sun elevation,69.99941
+sun-direction,36,Sun elevation,68.09502
+sun-direction,37,Sun elevation,65.92894
+sun-direction,38,Sun elevation,63.52574
+sun-direction,39,Sun elevation,60.91262
+sun-direction,40,Sun elevation,58.11922
+sun-direction,41,Sun elevation,55.17716
+sun-direction,42,Sun elevation,52.11980
+sun-direction,43,Sun elevation,48.98176
+sun-direction,44,Sun elevation,45.79862
+sun-direction,45,Sun elevation,42.60641
+sun-direction,46,Sun elevation,39.44134
+sun-direction,47,Sun elevation,36.33924
+sun-direction,48,Sun elevation,33.33528
+sun-direction,49,Sun elevation,30.46347
+sun-direction,50,Sun elevation,27.75638
+sun-direction,51,Sun elevation,25.24465
+sun-direction,52,Sun elevation,22.95678
+sun-direction,53,Sun elevation,20.91865
+sun-direction,54,Sun elevation,19.15338
+sun-direction,55,Sun elevation,17.68095
+sun-direction,56,Sun elevation,16.51807
+sun-direction,57,Sun elevation,15.67790
+sun-direction,58,Sun elevation,15.16996
+sun-direction,59,Sun elevation,15.00000
+noise-slices,0,Slice,0.02000
+noise-slices,1,Slice,0.02428
+noise-slices,2,Slice,0.03705
+noise-slices,3,Slice,0.05809
+noise-slices,4,Slice,0.08701
+noise-slices,5,Slice,0.12330
+noise-slices,6,Slice,0.16631
+noise-slices,7,Slice,0.21527
+noise-slices,8,Slice,0.26932
+noise-slices,9,Slice,0.32748
+noise-slices,10,Slice,0.38873
+noise-slices,11,Slice,0.45195
+noise-slices,12,Slice,0.51604
+noise-slices,13,Slice,0.57984
+noise-slices,14,Slice,0.64221
+noise-slices,15,Slice,0.70205
+noise-slices,16,Slice,0.75828
+noise-slices,17,Slice,0.80990
+noise-slices,18,Slice,0.85599
+noise-slices,19,Slice,0.89573
+noise-slices,20,Slice,0.92841
+noise-slices,21,Slice,0.95344
+noise-slices,22,Slice,0.97038
+noise-slices,23,Slice,0.97893
+noise-slices,24,Slice,0.97893
+noise-slices,25,Slice,0.97038
+noise-slices,26,Slice,0.95344
+noise-slices,27,Slice,0.92841
+noise-slices,28,Slice,0.89573
+noise-slices,29,Slice,0.85599
+noise-slices,30,Slice,0.80990
+noise-slices,31,Slice,0.75828
+noise-slices,32,Slice,0.70205
+noise-slices,33,Slice,0.64221
+noise-slices,34,Slice,0.57984
+noise-slices,35,Slice,0.51604
+noise-slices,36,Slice,0.45195
+noise-slices,37,Slice,0.38873
+noise-slices,38,Slice,0.32748
+noise-slices,39,Slice,0.26932
+noise-slices,40,Slice,0.21527
+noise-slices,41,Slice,0.16631
+noise-slices,42,Slice,0.12330
+noise-slices,43,Slice,0.08701
+noise-slices,44,Slice,0.05809
+noise-slices,45,Slice,0.03705
+noise-slices,46,Slice,0.02428
+noise-slices,47,Slice,0.02000

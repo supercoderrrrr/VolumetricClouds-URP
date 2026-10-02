@@ -471,6 +471,7 @@ Shader "Volumetric Clouds/Cloud Raymarch"
             float dither = CloudDither(uv);
             float jitter = 0.5 + (dither - 0.5) * _DitherStrength;
             float rayDst = dstToLayer + actualStepSize * jitter;
+            float rayEnd = dstToLayer + dstLimit;
 
             float3 lightDir = normalize(_LightDirection.xyz);
             float cosTheta = dot(rayDir, lightDir);
@@ -489,7 +490,7 @@ Shader "Volumetric Clouds/Cloud Raymarch"
             [loop]
             for (int i = 0; i < 384; i++)
             {
-                if (i >= stepCount)
+                if (i >= stepCount || rayDst >= rayEnd)
                     break;
 
                 float3 samplePos = rayOrigin + rayDir * rayDst;
@@ -502,7 +503,6 @@ Shader "Volumetric Clouds/Cloud Raymarch"
                     emptySamples = 0;
                     float lightTransmittance = CloudLightmarch(samplePos, lightDir);
                     float multiScatterLight = lerp(lightTransmittance, sqrt(saturate(lightTransmittance)), _MultiScattering);
-                    debugLight = max(debugLight, lightTransmittance);
                     debugHeight = densityData.height01;
 
                     float powder = saturate(1.0 - exp(-densityData.density * 0.32));
@@ -523,6 +523,7 @@ Shader "Volumetric Clouds/Cloud Raymarch"
                     float opticalDepth = densityData.density * actualStepSize * CLOUD_EXTINCTION_SCALE;
                     float sampleAlpha = 1.0 - exp(-opticalDepth);
 
+                    debugLight += transmittance * sampleAlpha * lightTransmittance;
                     cloudRGB += transmittance * sampleAlpha * sampleColor;
                     transmittance *= exp(-opticalDepth);
 
@@ -544,13 +545,25 @@ Shader "Volumetric Clouds/Cloud Raymarch"
             float cloudAlpha = saturate(1.0 - transmittance);
 
             if (_DebugView == 3)
-                return float4(debugLight.xxx, cloudAlpha);
+                return float4((debugLight / max(0.0001, cloudAlpha)).xxx, cloudAlpha);
 
             if (_DebugView == 5)
                 return float4(debugHeight.xxx, cloudAlpha);
 
             if (_DebugView == 6)
-                return float4((usedSteps / 384.0).xxx, 1.0);
+            {
+                float fraction = saturate((float)usedSteps / maxSteps);
+                float3 low = float3(0.05, 0.12, 0.45);
+                float3 medium = float3(0.05, 0.85, 0.9);
+                float3 high = float3(1.0, 0.85, 0.05);
+                float3 limit = float3(0.95, 0.05, 0.02);
+                float3 heat = fraction < 0.333333
+                    ? lerp(low, medium, fraction * 3.0)
+                    : fraction < 0.666667
+                        ? lerp(medium, high, fraction * 3.0 - 1.0)
+                        : lerp(high, limit, fraction * 3.0 - 2.0);
+                return float4(heat, 1.0);
+            }
 
             return float4(cloudRGB, cloudAlpha);
         }
@@ -627,6 +640,18 @@ Shader "Volumetric Clouds/Cloud Raymarch"
                 cloud = SAMPLE_TEXTURE2D_X(_CloudLowResTexture, sampler_LinearClamp, uv);
             }
 
+            if (_DebugView == 2)
+                return half4(saturate(cloud.a).xxx, 1.0);
+
+            if (_DebugView == 4)
+            {
+                float weatherCoverage = CloudWeatherCoverage(sceneWorldPos);
+                return half4(weatherCoverage.xxx, 1.0);
+            }
+
+            if (_DebugView >= 3 && _DebugView <= 6)
+                return half4(cloud.rgb, 1.0);
+
             cloud.a = saturate(cloud.a);
             cloud.a = lerp(cloud.a, smoothstep(0.0, 1.0, cloud.a), _EdgeSharpening);
 
@@ -645,18 +670,6 @@ Shader "Volumetric Clouds/Cloud Raymarch"
             if (_DebugView == 1)
                 return half4(cloud.rgb, 1.0);
 
-            if (_DebugView == 2)
-                return half4(cloud.a.xxx, 1.0);
-
-            if (_DebugView == 4)
-            {
-                float weatherCoverage = CloudWeatherCoverage(sceneWorldPos);
-                return half4(weatherCoverage.xxx, 1.0);
-            }
-
-            if (_DebugView >= 3 && _DebugView <= 6)
-                return half4(cloud.rgb, 1.0);
-
             half3 result = sceneColor.rgb * (1.0 - cloud.a) + cloud.rgb;
             return half4(result, sceneColor.a);
         }
@@ -668,6 +681,9 @@ Shader "Volumetric Clouds/Cloud Raymarch"
             float2 uv = input.texcoord;
 
             half4 current = SAMPLE_TEXTURE2D_X(_CloudCurrentTexture, sampler_LinearClamp, uv);
+            if (_DebugView >= 2)
+                return current;
+
             float rawDepth = SampleSceneDepth(uv);
             float3 worldPos = CloudWorldPositionFromDepthMatrix(uv, rawDepth);
             float4 previousClip = mul(_PreviousViewProjectionMatrix, float4(worldPos, 1.0));
