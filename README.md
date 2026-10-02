@@ -2,15 +2,9 @@
 
 [English](#english) | [中文](#中文)
 
-![Volumetric clouds over a mountain scene](docs/media/showcase.jpg)
+[![Animated demo preview](docs/media/demo-preview.gif)](docs/media/volumetric-clouds-demo.mp4)
 
-**[Watch the demo: 25.87 seconds, 1080p](docs/media/volumetric-clouds-demo.mp4)**
-
-<details><summary>Animated preview / 动图预览</summary>
-
-![Short recording preview](docs/media/demo-preview.gif)
-
-</details>
+**[Watch the full demo: 25.87 seconds, 1080p / 查看完整演示视频](docs/media/volumetric-clouds-demo.mp4)**
 
 ## English
 
