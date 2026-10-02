@@ -1,0 +1,1078 @@
+{
+  "source": "Unity Version Control / Plastic SCM",
+  "exportedAt": "2026-10-02T02:51:07.4102516+00:00",
+  "redactions": [
+    "Account email",
+    "Organization and server identifiers",
+    "Absolute workspace paths",
+    "Authentication configuration"
+  ],
+  "note": "Metadata export, not a conversion of SCM revisions into Git commits. Historical comments are retained verbatim and may describe earlier implementations.",
+  "changesets": [
+    {
+      "changeset": 0,
+      "date": "2026-08-05T21:18:45+08:00",
+      "branch": "/main",
+      "comment": "",
+      "changedItems": []
+    },
+    {
+      "changeset": 1,
+      "date": "2026-08-07T11:57:40+08:00",
+      "branch": "/main",
+      "comment": "实现 Unity URP Ray Marching 体积云渲染原型及配套噪声生成工具\n\n本次提交完成了一套基于 URP 后处理管线的实时体积云渲染流程，包含 GPU 离线噪声生成、3D Texture 云密度采样、云盒 ray marching、基础体积光照、天气图控制、云形态参数控制及低分辨率渲染优化。\n\n主要实现内容：\n\n1. 实现 GPU 体积噪声生成流程\n- 新增 Compute Shader 噪声生成器，用 GPU 并行计算 3D 噪声数据。\n- 实现基于 Hash 的 tileable Worley Noise，支持多频率 F1 细胞噪声生成。\n- 实现 Value Noise FBM，并与 Worley FBM 组合生成 Perlin-Worley 风格 Shape Noise。\n- 使用 ComputeBuffer 接收 GPU 计算结果，并离线保存为 Unity Texture3D 资产。\n- 生成 Shape Noise 与 Detail Noise 两类 3D Texture：\n  - Shape Noise 用于控制云的大体积轮廓。\n  - Detail Noise 用于云边缘侵蚀和细节破碎。\n\n2. 实现编辑器工具链\n- 新增 Cloud Noise Generator 编辑器窗口，用于生成 Shape / Detail 体积噪声。\n- 新增 3D Noise Preview 工具，可按 Slice 和 RGBA 通道预览 Texture3D 噪声切片。\n- 新增 Weather Map Generator，用 2D FBM 噪声生成天气图，控制水平云量分布。\n- 新增 Dither Texture Generator，用于生成体积步进抖动纹理。\n\n3. 实现 URP 体积云渲染管线\n- 新增 ScriptableRendererFeature / ScriptableRenderPass，将体积云作为 URP 后处理 Pass 注入渲染流程。\n- 使用 Camera Depth Texture 进行屏幕空间深度重建。\n- 在 Shader 中通过 ComputeWorldSpacePosition 重建每个像素对应的世界空间射线方向。\n- 实现 rayBoxDst 云盒快速求交，用 AABB 相交算法计算视线进入云盒的距离和盒内行进距离。\n- 基于 ray marching 沿视线步进采样 3D Shape Noise / Detail Noise，累积云密度和透明度。\n\n4. 实现云密度与形态控制\n- 新增 CloudVolume 场景组件，用于可视化和控制云盒范围。\n- 支持 Density Multiplier、Density Threshold、Coverage、Detail Strength 等密度参数。\n- 实现云层高度渐变控制，包括 Bottom Fade 和 Top Fade，用于形成更自然的云底和云顶。\n- 支持 Weather Map 控制局部云量，实现大范围云区、空洞和云带分布。\n- 支持风向、主噪声流动、细节噪声流动和天气图漂移控制。\n\n5. 实现基础体积光照\n- 实现朝太阳方向的 Lightmarch，用多步采样估算云体内部遮蔽。\n- 使用 Beer-Lambert 吸收模型，通过 exp(-density * absorption) 计算光线透过率。\n- 支持 Shadow Color、Ambient Light、Light Absorption、Light Steps、Light Step Size 等光照参数。\n- 实现 Henyey-Greenstein 相位函数和银边高光参数，用于模拟体积云前向散射效果。\n\n6. 实现渲染优化与质量控制\n- 实现低分辨率体积云渲染 + 全分辨率 Composite Pass。\n- Pass 0 在低分辨率 RT 中输出云颜色和透明度。\n- Pass 1 将低分辨率云结果上采样并合成回相机颜色缓冲。\n- 支持 Render Scale 参数，在画质和性能之间切换。\n- 加入 jitter / dither 采样起点偏移，用于减轻 ray marching 步进切片感。\n- 提高 Max Steps 上限，使小 Step Size 下仍可完整穿过云盒，减少云体变薄问题。\n\n当前项目已形成完整的体积云核心流程：\nCompute Shader 离线噪声生成 -> Texture3D 云噪声资产 -> URP 后处理注入 -> 深度重建 -> 云盒求交 -> ray marching 密度累积 ->",
+      "changedItems": [
+        {
+          "type": "Added",
+          "path": "/Assets",
+          "previousPath": "/Assets"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds",
+          "previousPath": "/Assets/Clouds"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor",
+          "previousPath": "/Assets/Clouds/Editor"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudDitherTextureGenerator.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudDitherTextureGenerator.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudDitherTextureGenerator.cs.meta",
+          "previousPath": "/Assets/Clouds/Editor/CloudDitherTextureGenerator.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudNoiseGeneratorWindow.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudNoiseGeneratorWindow.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudNoiseGeneratorWindow.cs.meta",
+          "previousPath": "/Assets/Clouds/Editor/CloudNoiseGeneratorWindow.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudNoisePreviewWindow.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudNoisePreviewWindow.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudNoisePreviewWindow.cs.meta",
+          "previousPath": "/Assets/Clouds/Editor/CloudNoisePreviewWindow.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudWeatherMapGeneratorWindow.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudWeatherMapGeneratorWindow.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudWeatherMapGeneratorWindow.cs.meta",
+          "previousPath": "/Assets/Clouds/Editor/CloudWeatherMapGeneratorWindow.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor.meta",
+          "previousPath": "/Assets/Clouds/Editor.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise",
+          "previousPath": "/Assets/Clouds/GeneratedNoise"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Materials",
+          "previousPath": "/Assets/Clouds/Materials"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat",
+          "previousPath": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat.meta",
+          "previousPath": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Materials.meta",
+          "previousPath": "/Assets/Clouds/Materials.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime",
+          "previousPath": "/Assets/Clouds/Runtime"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs.meta",
+          "previousPath": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudVolume.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolume.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudVolume.cs.meta",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolume.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime.meta",
+          "previousPath": "/Assets/Clouds/Runtime.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders",
+          "previousPath": "/Assets/Clouds/Shaders"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders/CloudNoiseGenerator.compute",
+          "previousPath": "/Assets/Clouds/Shaders/CloudNoiseGenerator.compute"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders/CloudNoiseGenerator.compute.meta",
+          "previousPath": "/Assets/Clouds/Shaders/CloudNoiseGenerator.compute.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders/CloudNoisePreview.shader",
+          "previousPath": "/Assets/Clouds/Shaders/CloudNoisePreview.shader"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders/CloudNoisePreview.shader.meta",
+          "previousPath": "/Assets/Clouds/Shaders/CloudNoisePreview.shader.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders/CloudRayMarch.shader",
+          "previousPath": "/Assets/Clouds/Shaders/CloudRayMarch.shader"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders/CloudRayMarch.shader.meta",
+          "previousPath": "/Assets/Clouds/Shaders/CloudRayMarch.shader.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Shaders.meta",
+          "previousPath": "/Assets/Clouds/Shaders.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Textures",
+          "previousPath": "/Assets/Clouds/Textures"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Textures/CloudDither.png",
+          "previousPath": "/Assets/Clouds/Textures/CloudDither.png"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Textures/CloudDither.png.meta",
+          "previousPath": "/Assets/Clouds/Textures/CloudDither.png.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Textures/WeatherMap.png",
+          "previousPath": "/Assets/Clouds/Textures/WeatherMap.png"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Textures/WeatherMap.png.meta",
+          "previousPath": "/Assets/Clouds/Textures/WeatherMap.png.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Textures.meta",
+          "previousPath": "/Assets/Clouds/Textures.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds.meta",
+          "previousPath": "/Assets/Clouds.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Scenes",
+          "previousPath": "/Assets/Scenes"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Scenes/SampleScene.unity",
+          "previousPath": "/Assets/Scenes/SampleScene.unity"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Scenes/SampleScene.unity.meta",
+          "previousPath": "/Assets/Scenes/SampleScene.unity.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings",
+          "previousPath": "/Assets/Settings"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-HighFidelity-Renderer.asset",
+          "previousPath": "/Assets/Settings/URP-HighFidelity-Renderer.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-HighFidelity-Renderer.asset.meta",
+          "previousPath": "/Assets/Settings/URP-HighFidelity-Renderer.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-HighFidelity.asset",
+          "previousPath": "/Assets/Settings/URP-HighFidelity.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-HighFidelity.asset.meta",
+          "previousPath": "/Assets/Settings/URP-HighFidelity.asset.meta"
+        }
+      ]
+    },
+    {
+      "changeset": 2,
+      "date": "2026-08-07T14:14:11+08:00",
+      "branch": "/main",
+      "comment": "-参考其他项目做了一些优化",
+      "changedItems": [
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat",
+          "previousPath": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Runtime/CloudVolume.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolume.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Shaders/CloudRayMarch.shader",
+          "previousPath": "/Assets/Clouds/Shaders/CloudRayMarch.shader"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/DetailWorley64.asset",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/DetailWorley64.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/DetailWorley64.asset.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/DetailWorley64.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/ShapeWorley128.asset",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/ShapeWorley128.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/GeneratedNoise/ShapeWorley128.asset.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/ShapeWorley128.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudCurveTexture.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudCurveTexture.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudCurveTexture.cs.meta",
+          "previousPath": "/Assets/Clouds/Runtime/CloudCurveTexture.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudVolumeFollowCamera.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolumeFollowCamera.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Runtime/CloudVolumeFollowCamera.cs.meta",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolumeFollowCamera.cs.meta"
+        },
+        {
+          "type": "Deleted",
+          "path": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset"
+        },
+        {
+          "type": "Deleted",
+          "path": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/DetailWorley32.asset.meta"
+        },
+        {
+          "type": "Deleted",
+          "path": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset"
+        },
+        {
+          "type": "Deleted",
+          "path": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset.meta",
+          "previousPath": "/Assets/Clouds/GeneratedNoise/ShapeWorley64.asset.meta"
+        }
+      ]
+    },
+    {
+      "changeset": 3,
+      "date": "2026-08-07T15:06:37+08:00",
+      "branch": "/main",
+      "comment": "- 做了更多优化",
+      "changedItems": [
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudRayMarchRenderFeature.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Runtime/CloudVolume.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolume.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Shaders/CloudRayMarch.shader",
+          "previousPath": "/Assets/Clouds/Shaders/CloudRayMarch.shader"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Scenes/SampleScene.unity",
+          "previousPath": "/Assets/Scenes/SampleScene.unity"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Settings/URP-HighFidelity-Renderer.asset",
+          "previousPath": "/Assets/Settings/URP-HighFidelity-Renderer.asset"
+        }
+      ]
+    },
+    {
+      "changeset": 4,
+      "date": "2026-08-07T18:44:45+08:00",
+      "branch": "/main",
+      "comment": "实现 URP Ray March 体积云渲染系统\n\n- 搭建基于 Compute Shader 的 3D 云噪声离线生成流程。\n- 生成并接入 Shape Worley 与 Detail Worley 3D Texture。\n- 实现 URP ScriptableRendererFeature 体积云渲染管线。\n- 实现世界空间云层求交与 Ray March 光线步进。\n- 实现基于深度重建的屏幕后处理合成。\n- 加入高度曲线控制云密度、侵蚀与环境遮蔽。\n- 加入 Weather Map 控制大尺度云覆盖分布。\n- 加入 Detail Noise 与 Micro Erosion 控制云边缘破碎细节。\n- 加入 Light Marching、光吸收、多重散射、Powder Effect 与 Silver Lining 控制。\n- 实现低分辨率体积云渲染与 Temporal Accumulation。\n- 实现 Depth-Aware Upsampling 与边缘锐化重建。\n- 加入近似云影效果，用于影响场景几何体明暗。\n- 加入抗平铺噪声采样，减少重复云块图案。\n- 优化 Scene/Game 相机切换时的 Temporal History 处理。\n- 将原本固定云盒流程改为世界空间云层渲染。\n- 添加 CloudVolume 自定义 Inspector 面板。\n- 添加可编辑 Sparse / Cloudy / Overcast / Stormy 预设系统。\n- 添加 Portfolio Look 与 Performance Preview 快捷参数。\n- 添加 CloudOnly、Alpha、Lighting、Weather、Height、RaySteps 等调试视图。\n- 补充体积云渲染流程说明文档。",
+      "changedItems": [
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat",
+          "previousPath": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Runtime/CloudVolume.cs",
+          "previousPath": "/Assets/Clouds/Runtime/CloudVolume.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Scenes/SampleScene.unity",
+          "previousPath": "/Assets/Scenes/SampleScene.unity"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Settings/URP-HighFidelity-Renderer.asset",
+          "previousPath": "/Assets/Settings/URP-HighFidelity-Renderer.asset"
+        }
+      ]
+    },
+    {
+      "changeset": 5,
+      "date": "2026-10-02T10:28:16+08:00",
+      "branch": "/main",
+      "comment": "完成体积云作品集演示并补齐工程版本控制文件\n\n- 完成雪山演示场景、摄像机动画及最终云层参数配置\n- 整理 URP 高质量渲染配置与云材质的场景设置\n- 将漏交的 CloudVolume 自定义 Inspector、流程文档及对应 .meta 纳入版本控制\n- 补齐 Packages 清单和锁文件，以及 ProjectSettings，确保工程版本与依赖可还原\n- 补齐场景目录、URP 配置、全局管线设置等必要资产的 .meta\n- 修复重复生成 Texture3D 时删除旧资产造成 GUID 改变的问题，保留渲染资源引用\n- 为噪声生成器添加输出路径检查及 ComputeBuffer 释放保障\n- 将天气图生成器中的中文编码异常注释整理为简短英文注释\n- 保留 SCM 原有开发记录，GitHub 使用迁移快照并附真实变更集日志说明\n\n本次提交为工程完整性与作品集整理，不声称新增 SDF 加速或物理多重散射求解\n",
+      "changedItems": [
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Editor/CloudNoiseGeneratorWindow.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudNoiseGeneratorWindow.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Editor/CloudWeatherMapGeneratorWindow.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudWeatherMapGeneratorWindow.cs"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat",
+          "previousPath": "/Assets/Clouds/Materials/CloudRayMarch_Mat.mat"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Scenes/SampleScene.unity",
+          "previousPath": "/Assets/Scenes/SampleScene.unity"
+        },
+        {
+          "type": "Changed",
+          "path": "/Assets/Settings/URP-HighFidelity.asset",
+          "previousPath": "/Assets/Settings/URP-HighFidelity.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudVolumeEditor.cs",
+          "previousPath": "/Assets/Clouds/Editor/CloudVolumeEditor.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/Editor/CloudVolumeEditor.cs.meta",
+          "previousPath": "/Assets/Clouds/Editor/CloudVolumeEditor.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/VolumetricCloudsPipeline.md",
+          "previousPath": "/Assets/Clouds/VolumetricCloudsPipeline.md"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Clouds/VolumetricCloudsPipeline.md.meta",
+          "previousPath": "/Assets/Clouds/VolumetricCloudsPipeline.md.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/SampleSceneProfile.asset",
+          "previousPath": "/Assets/Settings/SampleSceneProfile.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/SampleSceneProfile.asset.meta",
+          "previousPath": "/Assets/Settings/SampleSceneProfile.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Balanced-Renderer.asset",
+          "previousPath": "/Assets/Settings/URP-Balanced-Renderer.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Balanced-Renderer.asset.meta",
+          "previousPath": "/Assets/Settings/URP-Balanced-Renderer.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Balanced.asset",
+          "previousPath": "/Assets/Settings/URP-Balanced.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Balanced.asset.meta",
+          "previousPath": "/Assets/Settings/URP-Balanced.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Performant-Renderer.asset",
+          "previousPath": "/Assets/Settings/URP-Performant-Renderer.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Performant-Renderer.asset.meta",
+          "previousPath": "/Assets/Settings/URP-Performant-Renderer.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Performant.asset",
+          "previousPath": "/Assets/Settings/URP-Performant.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings/URP-Performant.asset.meta",
+          "previousPath": "/Assets/Settings/URP-Performant.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain",
+          "previousPath": "/Assets/Snow Mountain"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain.meta",
+          "previousPath": "/Assets/Snow Mountain.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Animation",
+          "previousPath": "/Assets/Animation"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Animation.meta",
+          "previousPath": "/Assets/Animation.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Readme.asset",
+          "previousPath": "/Assets/Readme.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Readme.asset.meta",
+          "previousPath": "/Assets/Readme.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Scenes.meta",
+          "previousPath": "/Assets/Scenes.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Settings.meta",
+          "previousPath": "/Assets/Settings.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo",
+          "previousPath": "/Assets/TutorialInfo"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo.meta",
+          "previousPath": "/Assets/TutorialInfo.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/UniversalRenderPipelineGlobalSettings.asset",
+          "previousPath": "/Assets/UniversalRenderPipelineGlobalSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/UniversalRenderPipelineGlobalSettings.asset.meta",
+          "previousPath": "/Assets/UniversalRenderPipelineGlobalSettings.asset.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/.gitignore",
+          "previousPath": "/.gitignore"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation",
+          "previousPath": "/Documentation"
+        },
+        {
+          "type": "Added",
+          "path": "/ignore.conf",
+          "previousPath": "/ignore.conf"
+        },
+        {
+          "type": "Added",
+          "path": "/Packages",
+          "previousPath": "/Packages"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings",
+          "previousPath": "/ProjectSettings"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials",
+          "previousPath": "/Assets/Snow Mountain/Materials"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials/enviromentMap.mat",
+          "previousPath": "/Assets/Snow Mountain/Materials/enviromentMap.mat"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials/enviromentMap.mat.meta",
+          "previousPath": "/Assets/Snow Mountain/Materials/enviromentMap.mat.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials/mountain_Snow_000.mat",
+          "previousPath": "/Assets/Snow Mountain/Materials/mountain_Snow_000.mat"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials/mountain_Snow_000.mat.meta",
+          "previousPath": "/Assets/Snow Mountain/Materials/mountain_Snow_000.mat.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials/whitePlane.mat",
+          "previousPath": "/Assets/Snow Mountain/Materials/whitePlane.mat"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials/whitePlane.mat.meta",
+          "previousPath": "/Assets/Snow Mountain/Materials/whitePlane.mat.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Materials.meta",
+          "previousPath": "/Assets/Snow Mountain/Materials.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Prefab",
+          "previousPath": "/Assets/Snow Mountain/Prefab"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Prefab/mountain_Snow_000.prefab",
+          "previousPath": "/Assets/Snow Mountain/Prefab/mountain_Snow_000.prefab"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Prefab/mountain_Snow_000.prefab.meta",
+          "previousPath": "/Assets/Snow Mountain/Prefab/mountain_Snow_000.prefab.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Prefab.meta",
+          "previousPath": "/Assets/Snow Mountain/Prefab.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Scenes",
+          "previousPath": "/Assets/Snow Mountain/Scenes"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Scenes/SnowMountains.unity",
+          "previousPath": "/Assets/Snow Mountain/Scenes/SnowMountains.unity"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Scenes/SnowMountains.unity.meta",
+          "previousPath": "/Assets/Snow Mountain/Scenes/SnowMountains.unity.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Scenes/SnowMountainsSettings.lighting",
+          "previousPath": "/Assets/Snow Mountain/Scenes/SnowMountainsSettings.lighting"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Scenes/SnowMountainsSettings.lighting.meta",
+          "previousPath": "/Assets/Snow Mountain/Scenes/SnowMountainsSettings.lighting.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Scenes.meta",
+          "previousPath": "/Assets/Snow Mountain/Scenes.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source",
+          "previousPath": "/Assets/Snow Mountain/Source"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/cubemap",
+          "previousPath": "/Assets/Snow Mountain/Source/cubemap"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/cubemap/003_Sunrise_SkyboxVol2.hdr",
+          "previousPath": "/Assets/Snow Mountain/Source/cubemap/003_Sunrise_SkyboxVol2.hdr"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/cubemap/003_Sunrise_SkyboxVol2.hdr.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/cubemap/003_Sunrise_SkyboxVol2.hdr.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/cubemap.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/cubemap.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx/Materials",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx/Materials"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx/Materials/defaultMat.mat",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx/Materials/defaultMat.mat"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx/Materials/defaultMat.mat.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx/Materials/defaultMat.mat.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx/Materials.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx/Materials.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx/mountain_Snow_000.fbx",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx/mountain_Snow_000.fbx"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx/mountain_Snow_000.fbx.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx/mountain_Snow_000.fbx.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/fbx.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/fbx.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/tga",
+          "previousPath": "/Assets/Snow Mountain/Source/tga"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Aldedo.tga",
+          "previousPath": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Aldedo.tga"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Aldedo.tga.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Aldedo.tga.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Normal.tga",
+          "previousPath": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Normal.tga"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Normal.tga.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/tga/mountain_Snow_000_Normal.tga.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source/tga.meta",
+          "previousPath": "/Assets/Snow Mountain/Source/tga.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Snow Mountain/Source.meta",
+          "previousPath": "/Assets/Snow Mountain/Source.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Animation/CameraShowCase.anim",
+          "previousPath": "/Assets/Animation/CameraShowCase.anim"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Animation/CameraShowCase.anim.meta",
+          "previousPath": "/Assets/Animation/CameraShowCase.anim.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Animation/Main Camera.controller",
+          "previousPath": "/Assets/Animation/Main Camera.controller"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/Animation/Main Camera.controller.meta",
+          "previousPath": "/Assets/Animation/Main Camera.controller.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Icons",
+          "previousPath": "/Assets/TutorialInfo/Icons"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Icons/URP.png",
+          "previousPath": "/Assets/TutorialInfo/Icons/URP.png"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Icons/URP.png.meta",
+          "previousPath": "/Assets/TutorialInfo/Icons/URP.png.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Icons.meta",
+          "previousPath": "/Assets/TutorialInfo/Icons.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Layout.wlt",
+          "previousPath": "/Assets/TutorialInfo/Layout.wlt"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Layout.wlt.meta",
+          "previousPath": "/Assets/TutorialInfo/Layout.wlt.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts",
+          "previousPath": "/Assets/TutorialInfo/Scripts"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts/Editor",
+          "previousPath": "/Assets/TutorialInfo/Scripts/Editor"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts/Editor/ReadmeEditor.cs",
+          "previousPath": "/Assets/TutorialInfo/Scripts/Editor/ReadmeEditor.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts/Editor/ReadmeEditor.cs.meta",
+          "previousPath": "/Assets/TutorialInfo/Scripts/Editor/ReadmeEditor.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts/Editor.meta",
+          "previousPath": "/Assets/TutorialInfo/Scripts/Editor.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts/Readme.cs",
+          "previousPath": "/Assets/TutorialInfo/Scripts/Readme.cs"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts/Readme.cs.meta",
+          "previousPath": "/Assets/TutorialInfo/Scripts/Readme.cs.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Assets/TutorialInfo/Scripts.meta",
+          "previousPath": "/Assets/TutorialInfo/Scripts.meta"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation/scm",
+          "previousPath": "/Documentation/scm"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation/scm/changesets.json",
+          "previousPath": "/Documentation/scm/changesets.json"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation/scm/HISTORY.md",
+          "previousPath": "/Documentation/scm/HISTORY.md"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation/SCM_FINAL_CHECKIN.txt",
+          "previousPath": "/Documentation/SCM_FINAL_CHECKIN.txt"
+        },
+        {
+          "type": "Added",
+          "path": "/Packages/manifest.json",
+          "previousPath": "/Packages/manifest.json"
+        },
+        {
+          "type": "Added",
+          "path": "/Packages/packages-lock.json",
+          "previousPath": "/Packages/packages-lock.json"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/QualitySettings.asset",
+          "previousPath": "/ProjectSettings/QualitySettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/AudioManager.asset",
+          "previousPath": "/ProjectSettings/AudioManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/BurstAotSettings_StandaloneWindows.json",
+          "previousPath": "/ProjectSettings/BurstAotSettings_StandaloneWindows.json"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/ClusterInputManager.asset",
+          "previousPath": "/ProjectSettings/ClusterInputManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/CommonBurstAotSettings.json",
+          "previousPath": "/ProjectSettings/CommonBurstAotSettings.json"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/DynamicsManager.asset",
+          "previousPath": "/ProjectSettings/DynamicsManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/EditorBuildSettings.asset",
+          "previousPath": "/ProjectSettings/EditorBuildSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/EditorSettings.asset",
+          "previousPath": "/ProjectSettings/EditorSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/GraphicsSettings.asset",
+          "previousPath": "/ProjectSettings/GraphicsSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/InputManager.asset",
+          "previousPath": "/ProjectSettings/InputManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/MemorySettings.asset",
+          "previousPath": "/ProjectSettings/MemorySettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/NavMeshAreas.asset",
+          "previousPath": "/ProjectSettings/NavMeshAreas.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/PackageManagerSettings.asset",
+          "previousPath": "/ProjectSettings/PackageManagerSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/Physics2DSettings.asset",
+          "previousPath": "/ProjectSettings/Physics2DSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/PresetManager.asset",
+          "previousPath": "/ProjectSettings/PresetManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/ProjectSettings.asset",
+          "previousPath": "/ProjectSettings/ProjectSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/ProjectVersion.txt",
+          "previousPath": "/ProjectSettings/ProjectVersion.txt"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/SceneTemplateSettings.json",
+          "previousPath": "/ProjectSettings/SceneTemplateSettings.json"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/ShaderGraphSettings.asset",
+          "previousPath": "/ProjectSettings/ShaderGraphSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/TagManager.asset",
+          "previousPath": "/ProjectSettings/TagManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/TimeManager.asset",
+          "previousPath": "/ProjectSettings/TimeManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/UnityConnectSettings.asset",
+          "previousPath": "/ProjectSettings/UnityConnectSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/URPProjectSettings.asset",
+          "previousPath": "/ProjectSettings/URPProjectSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/VersionControlSettings.asset",
+          "previousPath": "/ProjectSettings/VersionControlSettings.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/VFXManager.asset",
+          "previousPath": "/ProjectSettings/VFXManager.asset"
+        },
+        {
+          "type": "Added",
+          "path": "/ProjectSettings/XRSettings.asset",
+          "previousPath": "/ProjectSettings/XRSettings.asset"
+        }
+      ]
+    },
+    {
+      "changeset": 6,
+      "date": "2026-10-02T10:49:52+08:00",
+      "branch": "/main",
+      "comment": "清理作品集场景的太阳 Animator 丢失引用\n\n- 最终工程还原检查发现 Directional Light 的 Animator 引用了不存在的控制器 GUID\n- 本地未找到对应太阳动画资源，通过 Unity Editor API 清除丢失引用并禁用空 Animator\n- 保留太阳 Transform 姿态与光照参数，不重新制作或声称已恢复缺失的太阳动画\n- 确认摄像机现有 Main Camera.controller 与 CameraShowCase 动画剪辑引用正常并保持原样\n- 发布副本同步清理引用，公开天空演示仍保持摄像机 Animator 禁用以方便参数调节\n- 更新 GitHub 发布验证说明及真实 SCM 变更集导出\n",
+      "changedItems": [
+        {
+          "type": "Changed",
+          "path": "/Assets/Scenes/SampleScene.unity",
+          "previousPath": "/Assets/Scenes/SampleScene.unity"
+        },
+        {
+          "type": "Added",
+          "path": "/Documentation/SCM_FINAL_REFERENCE_FIX.txt",
+          "previousPath": "/Documentation/SCM_FINAL_REFERENCE_FIX.txt"
+        }
+      ]
+    }
+  ]
+}

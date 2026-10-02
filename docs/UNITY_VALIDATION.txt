@@ -1,0 +1,7 @@
+Unity 2022.3.62f2
+Graphics: Direct3D11
+Compute dispatch: passed
+Texture3D regeneration GUID preservation: passed
+URP camera render requests: completed for Final, Alpha, Lighting and RaySteps
+Shader error check: passed
+Interactive playback and GPU performance profiling: not measured

@@ -1,0 +1,179 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<float4> _Result;
+int _Size;
+int _Seed;
+float _ShapeContrast;
+float _WorleyErosion;
+int _NoiseMode;
+
+uint Hash(uint x)
+{
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
+}
+
+uint Hash3(uint3 p, uint seed)
+{
+    return Hash(p.x * 73856093u ^ p.y * 19349663u ^ p.z * 83492791u ^ seed ^ (uint) _Seed);
+}
+
+float Random01(uint3 p, uint seed)
+{
+    uint h = Hash3(p, seed);
+    return (h & 0x00ffffffu) / 16777215.0;
+}
+
+int3 WrapCell(int3 cell, int count)
+{
+    return int3(
+        (cell.x % count + count) % count,
+        (cell.y % count + count) % count,
+        (cell.z % count + count) % count
+    );
+}
+
+float3 RandomPoint(uint3 cell)
+{
+    return float3(
+        Random01(cell, 1u),
+        Random01(cell, 2u),
+        Random01(cell, 3u)
+    );
+}
+
+float Smooth(float t)
+{
+    return t * t * (3.0 - 2.0 * t);
+}
+
+float3 Smooth3(float3 t)
+{
+    return float3(Smooth(t.x), Smooth(t.y), Smooth(t.z));
+}
+
+float ValueNoise(float3 uvw, int cellCount)
+{
+    float3 p = uvw * cellCount;
+    int3 baseCell = (int3) floor(p);
+    float3 local = frac(p);
+    float3 s = Smooth3(local);
+
+    float c000 = Random01((uint3) WrapCell(baseCell + int3(0, 0, 0), cellCount), 11u);
+    float c100 = Random01((uint3) WrapCell(baseCell + int3(1, 0, 0), cellCount), 11u);
+    float c010 = Random01((uint3) WrapCell(baseCell + int3(0, 1, 0), cellCount), 11u);
+    float c110 = Random01((uint3) WrapCell(baseCell + int3(1, 1, 0), cellCount), 11u);
+
+    float c001 = Random01((uint3) WrapCell(baseCell + int3(0, 0, 1), cellCount), 11u);
+    float c101 = Random01((uint3) WrapCell(baseCell + int3(1, 0, 1), cellCount), 11u);
+    float c011 = Random01((uint3) WrapCell(baseCell + int3(0, 1, 1), cellCount), 11u);
+    float c111 = Random01((uint3) WrapCell(baseCell + int3(1, 1, 1), cellCount), 11u);
+
+    float x00 = lerp(c000, c100, s.x);
+    float x10 = lerp(c010, c110, s.x);
+    float x01 = lerp(c001, c101, s.x);
+    float x11 = lerp(c011, c111, s.x);
+
+    float y0 = lerp(x00, x10, s.y);
+    float y1 = lerp(x01, x11, s.y);
+
+    return lerp(y0, y1, s.z);
+}
+
+float ValueFBM(float3 uvw)
+{
+    float n = 0.0;
+    float amplitude = 0.5;
+
+    n += ValueNoise(uvw, 4) * amplitude;
+    amplitude *= 0.5;
+
+    n += ValueNoise(uvw, 8) * amplitude;
+    amplitude *= 0.5;
+
+    n += ValueNoise(uvw, 16) * amplitude;
+    amplitude *= 0.5;
+
+    n += ValueNoise(uvw, 32) * amplitude;
+
+    return saturate(n);
+}
+
+float WorleyF1(float3 uvw, int cellCount)
+{
+    float3 p = uvw * cellCount;
+    int3 baseCell = (int3) floor(p);
+
+    float minDst = 999.0;
+
+    for (int z = -1; z <= 1; z++)
+        for (int y = -1; y <= 1; y++)
+            for (int x = -1; x <= 1; x++)
+            {
+                int3 cell = baseCell + int3(x, y, z);
+                int3 wrapped = WrapCell(cell, cellCount);
+
+                float3 feature = (float3) cell + RandomPoint((uint3) wrapped);
+                float dst = distance(p, feature);
+
+                minDst = min(minDst, dst);
+            }
+
+    return saturate(minDst / 1.7320508);
+}
+
+float WorleyFBM(float3 uvw)
+{
+    float w4 = 1.0 - WorleyF1(uvw, 4);
+    float w8 = 1.0 - WorleyF1(uvw, 8);
+    float w16 = 1.0 - WorleyF1(uvw, 16);
+
+    return saturate(w4 * 0.625 + w8 * 0.25 + w16 * 0.125);
+}
+
+float Remap(float value, float oldMin, float oldMax, float newMin, float newMax)
+{
+    return newMin + saturate((value - oldMin) / (oldMax - oldMin)) * (newMax - newMin);
+}
+
+[numthreads(8, 8, 8)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Size || id.y >= _Size || id.z >= _Size)
+        return;
+
+    float3 uvw = (id + 0.5) / _Size;
+
+    uint index = id.x + id.y * _Size + id.z * _Size * _Size;
+
+    float worley8 = 1.0 - WorleyF1(uvw, 8);
+    float worley16 = 1.0 - WorleyF1(uvw, 16);
+    float worley32 = 1.0 - WorleyF1(uvw, 32);
+
+    if (_NoiseMode == 1)
+    {
+        float detail = saturate(
+            worley8 * 0.625 +
+            worley16 * 0.25 +
+            worley32 * 0.125
+        );
+
+        _Result[index] = float4(detail, worley8, worley16, worley32);
+        return;
+    }
+
+    float valueFBM = ValueFBM(uvw);
+    float worleyFBM = WorleyFBM(uvw);
+
+    float erosion = saturate(1.0 - worleyFBM) * _WorleyErosion;
+
+    float shape = Remap(valueFBM, erosion, 1.0, 0.0, 1.0);
+    shape = saturate(shape);
+    shape = pow(shape, max(0.001, _ShapeContrast));
+
+    _Result[index] = float4(shape, worley8, worley16, worley32);
+}
